@@ -1,0 +1,36 @@
+*{
+
+  box-sizing: border-box;
+  transition: all 0.8 ease;
+    
+}
+
+#cont_recepcion_bigbag{
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+    padding: 10px;
+    background-color: #fff;
+    width: 100%;
+}
+
+#cont_recepcion_bigbag #cont_pasos{
+    place-content: space-around;
+    margin-top: 10px;
+    display: flex;
+    text-align: center;
+}
+
+#cont_recepcion_bigbag .paso{
+
+width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: bold;
+
+}

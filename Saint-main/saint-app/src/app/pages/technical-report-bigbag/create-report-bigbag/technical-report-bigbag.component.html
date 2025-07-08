@@ -1,0 +1,64 @@
+<p>Recepcionar llegada de empaque big bag </p>
+
+
+<div id="cont_recepcion_bigbag">
+    <div id="cont_pasos">
+        <div id="cont_paso1">
+            <div class="paso">1</div>
+            <div class="titulo-paso">Informacion Inicial</div>
+        </div>
+
+        <div id="cont_paso1">
+            <div class="paso">2</div>
+            <div class="titulo-paso">Informacion Adicional</div>
+        </div>
+
+        <div id="cont_paso1">
+            <div class="paso">3</div>
+            <div class="titulo-paso">Datos Fisicos</div>
+        </div>
+    </div>
+
+    <div id="cont_input">
+
+        <form >
+            <div class="form-group">
+                    <label for="fecha-ingreso">Fecha de Ingreso *</label>
+                    <input type="date" id="fecha-ingreso" name="fecha-ingreso" required>
+            </div>
+            <div class="form-group">
+                    <label for="fecha-ingreso">hora de Ingreso *</label>
+                    <input type="time" id="hora-ingreso" name="hora-ingreso" required>
+            </div>
+            <div class="form-group">
+                    <label for="fecha-ingreso">Planta:</label>
+                    <select name="planta" id="planta">
+                        <option value="">Seleccionar planta</option>
+                        <option value="planta-1">Planta 1</option>
+                        <option value="planta-2">Planta 2</option>
+                        <option value="planta-3">Planta 3</option>
+                    </select>
+            </div>
+            <div class="form-group">
+                    <label for="fecha-ingreso">No. Remision *</label>
+                    <input type="number" id="remision" name="remision" required>
+            </div>
+             <div class="form-group">
+                    <label for="fecha-ingreso">Cantidad relacionada *</label>
+                    <input type="number" id="cantidad_relacionada" name="cantidad_relacionada" required>
+            </div>
+            <div class="form-group">
+                    <label for="fecha-ingreso">Nombre del operario que recibe *</label>
+                    <input type="number" id="nom_operario" name="nom_operario" required>
+            </div>
+            <div class="form-group">
+                    <label for="fecha-ingreso">Firma del que recibe</label>
+                    <input type="number" id="firma" name="firma" required>
+            </div>
+            <div class="form-group">
+                    <label for="fecha-ingreso">Observaciones *</label>
+                    <textarea name="observaciones" id="observaciones"></textarea>
+            </div>
+         </form>
+    </div>
+</div>
