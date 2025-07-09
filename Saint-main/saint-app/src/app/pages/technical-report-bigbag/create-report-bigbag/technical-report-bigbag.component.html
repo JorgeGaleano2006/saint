@@ -21,7 +21,7 @@
     <div id="separacion"></div>
     
     <div id="cont_input">
-        <form [formGroup]="bigbagForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="bigbagForm" (ngSubmit)="onSubmit()" enctype="multipart/form-data">
 
             <!-- Paso 1: Información Inicial -->
             <div id="step-content-1" class="step-content" [style.display]="currentStep === 1 ? 'block' : 'none'">
@@ -46,13 +46,9 @@
                     
                     <div class="form-group">
                         <label for="planta">Planta *</label>
-                        <select id="planta" formControlName="planta" 
-                                [class.error]="isFieldInvalid('planta')">
-                            <option value="">Seleccionar planta</option>
-                            <option value="planta-1">Planta 1</option>
-                            <option value="planta-2">Planta 2</option>
-                            <option value="planta-3">Planta 3</option>
-                        </select>
+                        <input type="text" id="planta" formControlName="planta" 
+                               placeholder="Ingrese el nombre de la planta"
+                               [class.error]="isFieldInvalid('planta')">
                         <div *ngIf="isFieldInvalid('planta')" class="error-message">
                             {{ getFieldError('planta') }}
                         </div>
@@ -60,7 +56,7 @@
                     
                     <div class="form-group">
                         <label for="remision">No. Remisión *</label>
-                        <input type="text" id="remision" formControlName="remision"
+                        <input type="number" id="remision" formControlName="remision"
                                [class.error]="isFieldInvalid('remision')">
                         <div *ngIf="isFieldInvalid('remision')" class="error-message">
                             {{ getFieldError('remision') }}
@@ -86,16 +82,17 @@
                     </div>
                     
                     <div class="form-group full-width">
-                        <label for="firma">Firma de quien Recibe *</label>
-                        <div class="signature-area" (click)="onSignatureClick()" 
-                             [class.error]="isFieldInvalid('firma')">
-                            <div class="signature-text">Hacer clic para firmar</div>
-                        </div>
-                        <input type="hidden" formControlName="firma">
+                        <label for="firma">Firma de quien Recibe</label>
+                        <input type="file" id="firma" formControlName="firma" 
+                               accept="image/*" (change)="onSignatureChange($event)"
+                               [class.error]="isFieldInvalid('firma')">
                         <div *ngIf="isFieldInvalid('firma')" class="error-message">
                             {{ getFieldError('firma') }}
                         </div>
-                    </div> 
+                        <div *ngIf="firma?.value" class="signature-preview">
+                            <small>Firma cargada correctamente</small>
+                        </div>
+                    </div>
                     
                     <div class="form-group full-width">
                         <label for="observaciones">Observaciones *</label>
@@ -140,10 +137,10 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="documento_conductor">Documento del Conductor *</label>
-                        <input type="text" id="documento_conductor" formControlName="documentoConductor"
-                               [class.error]="isFieldInvalid('documentoConductor')">
-                        <div *ngIf="isFieldInvalid('documentoConductor')" class="error-message">
+                        <label for="firma_conductor">Firma del Conductor *</label>
+                        <input type="text" id="firma_conductor" formControlName="firmaConductor"
+                               [class.error]="isFieldInvalid('firmaConductor')">
+                        <div *ngIf="isFieldInvalid('firmaConductor')" class="error-message">
                             {{ getFieldError('documentoConductor') }}
                         </div>
                     </div>
@@ -153,6 +150,24 @@
             <!-- Paso 3: Datos Físicos -->
             <div id="step-content-3" class="step-content" [style.display]="currentStep === 3 ? 'block' : 'none'">
                 <div class="form-container">
+                    <div class="form-group">
+                        <label for="cantidadFisico">Cantidad Física *</label>
+                        <input type="number" id="cantidadFisico" formControlName="cantidadFisico"
+                               [class.error]="isFieldInvalid('cantidadFisico')">
+                        <div *ngIf="isFieldInvalid('cantidadFisico')" class="error-message">
+                            {{ getFieldError('cantidadFisico') }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="diferenciaReportada">Diferencia Reportada</label>
+                        <input type="text" id="diferenciaReportada" formControlName="diferenciaReportada"
+                               readonly class="readonly-field" [value]="diferenciaReportada?.value || ''">
+                        <div class="info-message">
+                            <small>Este campo se calcula automáticamente basado en la cantidad relacionada y cantidad física</small>
+                        </div>
+                    </div>
+                    
                     
                 </div>
             </div>
@@ -170,7 +185,7 @@
                 </button>
                 
                 <button type="submit" class="btn btn-success" 
-                        *ngIf="currentStep === totalSteps" [disabled]="!bigbagForm.valid">
+                        *ngIf="currentStep === totalSteps" >
                     Enviar Formulario
                 </button>
             </div>

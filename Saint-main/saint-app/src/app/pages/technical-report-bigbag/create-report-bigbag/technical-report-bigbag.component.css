@@ -48,11 +48,11 @@ body {
 #cont_recepcion_bigbag #cont_pasos::after {
     content: '';
     position: absolute;
-    top: 25px; /* Centrado con los círculos de 50px */
+    top: 33px; /* Centrado con los círculos de 50px */
     left: 0;
     height: 2px;
     background-color: #007bff;
-    z-index: 2;
+    z-index: 999;
     transition: width 0.5s ease;
 }
 
@@ -108,9 +108,9 @@ body {
 }
 
 #cont_recepcion_bigbag #cont_pasos .completed .paso {
-    background-color: #28a745;
+    background-color: #3F51B5;
     color: white;
-    border-color: #28a745;
+    border-color: #3F51B5;
 }
 
 #cont_recepcion_bigbag #cont_pasos .completed .paso::after {
@@ -137,7 +137,7 @@ body {
 }
 
 #cont_recepcion_bigbag #cont_pasos .completed .titulo-paso {
-    color: #28a745;
+    color: #3F51B5;
     font-weight: 600;
 }
 
@@ -290,12 +290,12 @@ h1 {
 }
 
 .btn-success {
-    background-color: #28a745;
+    background-color: #3f51b5;
     color: white;
 }
 
 .btn-success:hover {
-    background-color: #218838;
+    background-color: #28378d;
 }
 
 .btn:disabled {

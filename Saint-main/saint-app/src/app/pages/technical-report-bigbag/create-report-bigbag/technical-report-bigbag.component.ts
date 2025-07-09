@@ -35,11 +35,11 @@ export class TechnicalReportBigbagComponent implements OnInit {
       // Paso 1: Información Inicial
       fechaIngreso: [this.getTodayDate(), Validators.required],
       horaIngreso: [this.getCurrentTime(), Validators.required],
-      planta: ['', Validators.required],
+      planta: ['', Validators.required], // Ahora es un input text
       remision: ['', Validators.required],
       cantidadRelacionada: ['', [Validators.required, Validators.min(1)]],
       nomOperario: ['', Validators.required],
-      firma: [''], // REMOVIDO Validators.required - ahora es opcional
+      firma: [''], // Ahora es un input image - opcional
       observaciones: ['', Validators.required],
       
       // Paso 2: Información Adicional
@@ -49,10 +49,21 @@ export class TechnicalReportBigbagComponent implements OnInit {
       documentoConductor: ['', Validators.required],
       
       // Paso 3: Datos Físicos
+      cantidadFisico: ['', [Validators.required, Validators.min(0)]],
+      diferenciaReportada: [''],
       pesoTotal: ['', [Validators.required, Validators.min(0)]],
       estadoEmpaque: ['', Validators.required],
       tipoMaterial: ['', Validators.required],
       observacionesFisicas: ['']
+    });
+
+    // Suscribirse a cambios en las cantidades para calcular la diferencia automáticamente
+    this.bigbagForm.get('cantidadRelacionada')?.valueChanges.subscribe(() => {
+      this.calcularDiferenciaReportada();
+    });
+
+    this.bigbagForm.get('cantidadFisico')?.valueChanges.subscribe(() => {
+      this.calcularDiferenciaReportada();
     });
   }
 
@@ -90,6 +101,35 @@ export class TechnicalReportBigbagComponent implements OnInit {
       
       this.updateStepDisplay();
     }
+  } 
+
+  // Función corregida para calcular la diferencia reportada
+  calcularDiferenciaReportada(): void {
+    const cantidadRelacionada = this.bigbagForm.get('cantidadRelacionada')?.value;
+    const cantidadFisico = this.bigbagForm.get('cantidadFisico')?.value;
+    
+    if (cantidadRelacionada && cantidadFisico) {
+      const cantRelacionada = parseFloat(cantidadRelacionada);
+      const cantFisico = parseFloat(cantidadFisico);
+      
+      if (!isNaN(cantRelacionada) && !isNaN(cantFisico)) {
+        const diferencia = cantFisico - cantRelacionada;
+        let mensajeDiferencia = '';
+        
+        if (diferencia > 0) {
+          mensajeDiferencia = ` +${diferencia} productos de más`;
+        } else if (diferencia < 0) {
+          mensajeDiferencia = `${Math.abs(diferencia)} productos faltantes`;
+        } else {
+          mensajeDiferencia = ' Las cantidades coinciden';
+        }
+        
+        // Actualizar el campo de diferencia reportada
+        this.bigbagForm.patchValue({
+          diferenciaReportada: mensajeDiferencia
+        });
+      }
+    }
   }
 
   // Validaciones
@@ -120,12 +160,11 @@ export class TechnicalReportBigbagComponent implements OnInit {
   private getFieldsForStep(step: number): string[] {
     switch (step) {
       case 1:
-        // REMOVIDO 'firma' de los campos requeridos del paso 1
         return ['fechaIngreso', 'horaIngreso', 'planta', 'remision', 'cantidadRelacionada', 'nomOperario', 'observaciones'];
       case 2:
-        return ['nomConductor', 'placaVehiculo', 'empresaTransporte', 'documentoConductor'];
+        return ['nomConductor', 'placaVehiculo', 'empresaTransporte', 'firmaConductor'];
       case 3:
-        return ['pesoTotal', 'estadoEmpaque', 'tipoMaterial'];
+        return ['cantidadFisico', 'pesoTotal', 'estadoEmpaque', 'tipoMaterial'];
       default:
         return [];
     }
@@ -212,16 +251,22 @@ export class TechnicalReportBigbagComponent implements OnInit {
     return '';
   } 
 
-  // Manejo de firma
-  onSignatureClick(): void {
-    // Aquí puedes implementar la lógica para capturar la firma
-    // Por ejemplo, abrir un modal con canvas para firmar
-    console.log('Abrir módulo de firma');
-    
-    // Simulación de firma capturada (puedes remover esto después)
-    this.bigbagForm.patchValue({
-      firma: 'Firma simulada - ' + new Date().toLocaleString()
-    });
+  // Manejo de firma - ahora para input image
+  onSignatureChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      // Aquí puedes manejar la carga del archivo de imagen
+      console.log('Archivo de firma seleccionado:', file.name);
+      
+      // Opcionalmente, puedes leer el archivo para mostrarlo como preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.bigbagForm.patchValue({
+          firma: e.target?.result
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   // Envío del formulario
@@ -261,9 +306,8 @@ export class TechnicalReportBigbagComponent implements OnInit {
   get nomConductor() { return this.bigbagForm.get('nomConductor'); }
   get placaVehiculo() { return this.bigbagForm.get('placaVehiculo'); }
   get empresaTransporte() { return this.bigbagForm.get('empresaTransporte'); }
-  get documentoConductor() { return this.bigbagForm.get('documentoConductor'); }
-  get pesoTotal() { return this.bigbagForm.get('pesoTotal'); }
-  get estadoEmpaque() { return this.bigbagForm.get('estadoEmpaque'); }
-  get tipoMaterial() { return this.bigbagForm.get('tipoMaterial'); }
-  get observacionesFisicas() { return this.bigbagForm.get('observacionesFisicas'); }
+  get documentoConductor() { return this.bigbagForm.get('firmaConductor'); }
+  get cantidadFisico() { return this.bigbagForm.get('cantidadFisico'); }
+  get diferenciaReportada() { return this.bigbagForm.get('diferenciaReportada'); }
+
 }
