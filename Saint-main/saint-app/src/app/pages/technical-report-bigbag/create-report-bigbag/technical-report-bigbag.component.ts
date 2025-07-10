@@ -1,5 +1,7 @@
+// technical-report-bigbag.component.ts (versión actualizada)
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { BigbagService, BigBagFormData } from '../../../services/bigbag.service'; // Importa el servicio
 
 @Component({
   selector: 'app-technical-report-bigbag',
@@ -22,7 +24,18 @@ export class TechnicalReportBigbagComponent implements OnInit {
     3: { active: false, completed: false }
   };
 
-  constructor(private fb: FormBuilder) {
+  // Estados para manejar la carga
+  isSubmitting: boolean = false;
+  submitError: string = '';
+  submitSuccess: boolean = false;
+
+  // Para manejar archivos
+  selectedFile: File | null = null;
+
+  constructor(
+    private fb: FormBuilder,
+    private bigbagService: BigbagService // Inyecta el servicio
+  ) {
     this.initializeForm();
   }
 
@@ -35,26 +48,22 @@ export class TechnicalReportBigbagComponent implements OnInit {
       // Paso 1: Información Inicial
       fechaIngreso: [this.getTodayDate(), Validators.required],
       horaIngreso: [this.getCurrentTime(), Validators.required],
-      planta: ['', Validators.required], // Ahora es un input text
+      planta: ['', Validators.required],
       remision: ['', Validators.required],
       cantidadRelacionada: ['', [Validators.required, Validators.min(1)]],
       nomOperario: ['', Validators.required],
-      firma: [''], // Ahora es un input image - opcional
+      firma: [''], // Campo opcional para imagen
       observaciones: ['', Validators.required],
       
       // Paso 2: Información Adicional
       nomConductor: ['', Validators.required],
       placaVehiculo: ['', Validators.required],
       empresaTransporte: ['', Validators.required],
-      documentoConductor: ['', Validators.required],
+      firmaConductor: ['', Validators.required],
       
       // Paso 3: Datos Físicos
       cantidadFisico: ['', [Validators.required, Validators.min(0)]],
-      diferenciaReportada: [''],
-      pesoTotal: ['', [Validators.required, Validators.min(0)]],
-      estadoEmpaque: ['', Validators.required],
-      tipoMaterial: ['', Validators.required],
-      observacionesFisicas: ['']
+      diferenciaReportada: [''] // Campo calculado automáticamente
     });
 
     // Suscribirse a cambios en las cantidades para calcular la diferencia automáticamente
@@ -101,9 +110,9 @@ export class TechnicalReportBigbagComponent implements OnInit {
       
       this.updateStepDisplay();
     }
-  } 
+  }
 
-  // Función corregida para calcular la diferencia reportada
+  // Función para calcular la diferencia reportada
   calcularDiferenciaReportada(): void {
     const cantidadRelacionada = this.bigbagForm.get('cantidadRelacionada')?.value;
     const cantidadFisico = this.bigbagForm.get('cantidadFisico')?.value;
@@ -117,14 +126,13 @@ export class TechnicalReportBigbagComponent implements OnInit {
         let mensajeDiferencia = '';
         
         if (diferencia > 0) {
-          mensajeDiferencia = ` +${diferencia} productos de más`;
+          mensajeDiferencia = `+${diferencia} productos de más`;
         } else if (diferencia < 0) {
           mensajeDiferencia = `${Math.abs(diferencia)} productos faltantes`;
         } else {
-          mensajeDiferencia = ' Las cantidades coinciden';
+          mensajeDiferencia = 'Las cantidades coinciden';
         }
         
-        // Actualizar el campo de diferencia reportada
         this.bigbagForm.patchValue({
           diferenciaReportada: mensajeDiferencia
         });
@@ -164,7 +172,7 @@ export class TechnicalReportBigbagComponent implements OnInit {
       case 2:
         return ['nomConductor', 'placaVehiculo', 'empresaTransporte', 'firmaConductor'];
       case 3:
-        return ['cantidadFisico', 'pesoTotal', 'estadoEmpaque', 'tipoMaterial'];
+        return ['cantidadFisico'];
       default:
         return [];
     }
@@ -187,10 +195,7 @@ export class TechnicalReportBigbagComponent implements OnInit {
   }
 
   private updateStepDisplay(): void {
-    // Actualiza las clases CSS de los pasos
     this.updateStepStyles();
-    
-    // Muestra/oculta los contenidos de cada paso
     this.updateStepContent();
   }
 
@@ -200,11 +205,9 @@ export class TechnicalReportBigbagComponent implements OnInit {
       const stepCircle = stepElement?.querySelector('.paso');
       
       if (stepElement && stepCircle) {
-        // Remover clases existentes
         stepElement.classList.remove('active', 'completed');
         stepCircle.classList.remove('active', 'completed');
         
-        // Añadir clase según el estado
         if (this.stepStates[i].active) {
           stepElement.classList.add('active');
           stepCircle.classList.add('active');
@@ -217,20 +220,17 @@ export class TechnicalReportBigbagComponent implements OnInit {
   }
 
   private updateStepContent(): void {
-    // Oculta todos los contenidos de pasos
     const allStepContents = document.querySelectorAll('.step-content');
     allStepContents.forEach(content => {
       (content as HTMLElement).style.display = 'none';
     });
     
-    // Muestra solo el contenido del paso actual
     const currentStepContent = document.getElementById(`step-content-${this.currentStep}`);
     if (currentStepContent) {
       currentStepContent.style.display = 'block';
     }
   }
 
-  
   isFieldInvalid(fieldName: string): boolean {
     const field = this.bigbagForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
@@ -249,16 +249,15 @@ export class TechnicalReportBigbagComponent implements OnInit {
     }
     
     return '';
-  } 
+  }
 
-  // Manejo de firma - ahora para input image
+  // Manejo de firma - para input image
   onSignatureChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Aquí puedes manejar la carga del archivo de imagen
+      this.selectedFile = file;
       console.log('Archivo de firma seleccionado:', file.name);
       
-      // Opcionalmente, puedes leer el archivo para mostrarlo como preview
       const reader = new FileReader();
       reader.onload = (e) => {
         this.bigbagForm.patchValue({
@@ -269,20 +268,82 @@ export class TechnicalReportBigbagComponent implements OnInit {
     }
   }
 
-  // Envío del formulario
+  // Envío del formulario - ACTUALIZADO
   onSubmit(): void {
     if (this.bigbagForm.valid) {
+      this.isSubmitting = true;
+      this.submitError = '';
+      this.submitSuccess = false;
+
       const formData = this.bigbagForm.value;
-      console.log('Datos del formulario:', formData);
-      
-      // Aquí enviarías los datos a tu servicio
-      // this.bigbagService.submitForm(formData).subscribe(...)
-      
-      alert('Formulario enviado exitosamente');
+
+      // Si hay archivo de firma, usar FormData
+      if (this.selectedFile) {
+        const formDataWithFile = new FormData();
+        
+        // Agregar todos los campos del formulario
+        Object.keys(formData).forEach(key => {
+          if (key !== 'firma' && formData[key] !== null && formData[key] !== undefined) {
+            formDataWithFile.append(key, formData[key]);
+          }
+        });
+        
+        // Agregar el archivo de firma
+        formDataWithFile.append('firma', this.selectedFile);
+
+        // Enviar con archivo
+        this.bigbagService.submitBigBagFormWithFile(formDataWithFile).subscribe({
+          next: (response) => {
+            this.handleSubmitSuccess(response);
+          },
+          error: (error) => {
+            this.handleSubmitError(error);
+          }
+        });
+      } else {
+        // Enviar sin archivo
+        this.bigbagService.submitBigBagForm(formData).subscribe({
+          next: (response) => {
+            this.handleSubmitSuccess(response);
+          },
+          error: (error) => {
+            this.handleSubmitError(error);
+          }
+        });
+      }
     } else {
       console.log('Formulario inválido');
       this.markAllFieldsAsTouched();
     }
+  }
+
+  private handleSubmitSuccess(response: any): void {
+    this.isSubmitting = false;
+    this.submitSuccess = true;
+    console.log('Formulario enviado exitosamente:', response);
+    
+    // Opcional: resetear el formulario
+    // this.bigbagForm.reset();
+    // this.selectedFile = null;
+    // this.currentStep = 1;
+    
+    // Mostrar mensaje de éxito
+    alert('Formulario enviado exitosamente');
+  }
+
+  private handleSubmitError(error: any): void {
+    this.isSubmitting = false;
+    console.error('Error al enviar formulario:', error);
+    
+    if (error.error && error.error.message) {
+      this.submitError = error.error.message;
+    } else if (error.message) {
+      this.submitError = error.message;
+    } else {
+      this.submitError = 'Error desconocido al enviar el formulario';
+    }
+    
+    alert('Error al enviar el formulario: ' + this.submitError);
   }
 
   private markAllFieldsAsTouched(): void {
@@ -306,8 +367,7 @@ export class TechnicalReportBigbagComponent implements OnInit {
   get nomConductor() { return this.bigbagForm.get('nomConductor'); }
   get placaVehiculo() { return this.bigbagForm.get('placaVehiculo'); }
   get empresaTransporte() { return this.bigbagForm.get('empresaTransporte'); }
-  get documentoConductor() { return this.bigbagForm.get('firmaConductor'); }
+  get firmaConductor() { return this.bigbagForm.get('firmaConductor'); }
   get cantidadFisico() { return this.bigbagForm.get('cantidadFisico'); }
   get diferenciaReportada() { return this.bigbagForm.get('diferenciaReportada'); }
-
 }

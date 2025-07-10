@@ -34,12 +34,14 @@ body {
 
 /* Línea de conexión entre pasos */
 #cont_recepcion_bigbag #cont_pasos::before {
-    content: '';
+     content: "";
     position: absolute;
-    top: 25px; /* Centrado con los círculos de 50px */
+    top: 33px;
     left: 0;
+    width: 70%;
     right: 0;
     height: 2px;
+    place-self: center;
     background-color: #ddd;
     z-index: 1;
 }
@@ -52,7 +54,7 @@ body {
     left: 0;
     height: 2px;
     background-color: #007bff;
-    z-index: 999;
+    z-index: 2;
     transition: width 0.5s ease;
 }
 
@@ -62,11 +64,13 @@ body {
 }
 
 #cont_recepcion_bigbag #cont_pasos.step-2::after {
-    width: 50%;
+    width: 35%;
+    left: 15%;
 }
 
 #cont_recepcion_bigbag #cont_pasos.step-3::after {
-    width: 100%;
+    width: 70%;
+    left: 15%;
 }
 
 #cont_recepcion_bigbag #cont_pasos > div {
@@ -75,7 +79,6 @@ body {
     border-radius: 8px;
     transition: all 0.3s ease;
     position: relative;
-    z-index: 3;
     background-color: #fff;
     flex: 1;
     display: flex;

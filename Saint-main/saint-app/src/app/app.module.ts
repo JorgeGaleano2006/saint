@@ -16,6 +16,7 @@ import { NgChartsModule } from 'ng2-charts';
 import localeEs from '@angular/common/locales/es-CO';
 import { NgxPanZoomModule } from 'ngx-panzoom'; // Import the PanzoomModule
 
+
 // Technical data sheet
 import { TechnicalDataSheetsReportComponent } from './pages/technical-data-sheets-report/technical-data-sheets-report.component';
 import { CreateTechnicalSheetComponent } from './pages/technicalsheet/create/create-technical-sheet.component';
