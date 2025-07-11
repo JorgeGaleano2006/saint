@@ -1,81 +1,73 @@
-// bigbag.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface BigBagFormData {
+export interface BigBagData {
+  // Paso 1: Información Inicial
   fechaIngreso: string;
   horaIngreso: string;
   planta: string;
-  remision: string;
+  remision: number;
   cantidadRelacionada: number;
   nomOperario: string;
-  firma?: string;
+  firma?: File;
   observaciones: string;
+  
+  // Paso 2: Información Adicional
   nomConductor: string;
   placaVehiculo: string;
   empresaTransporte: string;
-  firmaConductor: string;
+  firmaConductor: File;
+  
+  // Paso 3: Datos Físicos
   cantidadFisico: number;
   diferenciaReportada: string;
 }
 
-export interface ApiResponse {
+export interface BigBagResponse {
   success: boolean;
-  message: string;
-  data?: any;
+  mensaje: string;
+  datos?: {
+    id: number;
+    fecha_creacion: string;
+    numero_recepcion: string;
+  };
+  error?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class BigbagService {
-  private apiUrl = 'http://localhost:8000/api'; // Cambia por tu URL de Laravel
-  
-  constructor(private http: HttpClient) {}
+  private apiUrl = 'http://localhost/php_backend_saint'; // Ajusta según tu configuración
 
-  // Método para enviar el formulario
-  submitBigBagForm(formData: BigBagFormData): Observable<ApiResponse> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
+  constructor(private http: HttpClient) { }
+
+  // Método principal para enviar datos del formulario BigBag
+  enviarDatosBigBag(formData: any, firmaFile?: File, firmaConductorFile?: File): Observable<BigBagResponse> {
+    const formDataToSend = new FormData();
+    
+    // Agregar datos del formulario
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== null && formData[key] !== '') {
+        formDataToSend.append(key, formData[key]);
+      }
     });
 
-    return this.http.post<ApiResponse>(`${this.apiUrl}/bigbag`, formData, { headers });
+    // Agregar archivos si existen
+    if (firmaFile) {
+      formDataToSend.append('firma', firmaFile, firmaFile.name);
+    }
+    
+    if (firmaConductorFile) {
+      formDataToSend.append('firmaConductor', firmaConductorFile, firmaConductorFile.name);
+    }
+
+    // Agregar timestamp para el servidor
+    formDataToSend.append('timestamp', new Date().toISOString());
+
+    return this.http.post<BigBagResponse>(`${this.apiUrl}/recepcion-bigbag.php`, formDataToSend);
   }
 
-  // Método para enviar formulario con archivo (si hay firma)
-  submitBigBagFormWithFile(formData: FormData): Observable<ApiResponse> {
-    const headers = new HttpHeaders({
-      'Accept': 'application/json'
-      // No incluir Content-Type para FormData, Angular lo maneja automáticamente
-    });
 
-    return this.http.post<ApiResponse>(`${this.apiUrl}/bigbag`, formData, { headers });
-  }
-
-  // Método para obtener todos los registros
-  getAllBigBags(): Observable<ApiResponse> {
-    return this.http.get<ApiResponse>(`${this.apiUrl}/bigbag`);
-  }
-
-  // Método para obtener un registro por ID
-  getBigBagById(id: number): Observable<ApiResponse> {
-    return this.http.get<ApiResponse>(`${this.apiUrl}/bigbag/${id}`);
-  }
-
-  // Método para actualizar un registro
-  updateBigBag(id: number, formData: BigBagFormData): Observable<ApiResponse> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    });
-
-    return this.http.put<ApiResponse>(`${this.apiUrl}/bigbag/${id}`, formData, { headers });
-  }
-
-  // Método para eliminar un registro
-  deleteBigBag(id: number): Observable<ApiResponse> {
-    return this.http.delete<ApiResponse>(`${this.apiUrl}/bigbag/${id}`);
-  }
 }

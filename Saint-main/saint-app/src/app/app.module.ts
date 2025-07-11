@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { PagesComponent } from './pages/pages.component';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -65,7 +66,9 @@ registerLocaleData(localeEs, 'es-CO');
         /*Editor*/
         AngularEditorModule,
         /* Zoom */
-        NgxPanZoomModule
+        NgxPanZoomModule,
+     
+    
     ], 
     providers: [
         { provide: LOCALE_ID, useValue: 'es-CO' },

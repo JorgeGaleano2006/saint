@@ -89,7 +89,8 @@
                         <div *ngIf="isFieldInvalid('firma')" class="error-message">
                             {{ getFieldError('firma') }}
                         </div>
-                        <div *ngIf="firma?.value" class="signature-preview">
+                        <div *ngIf="bigbagForm.get('firma')?.value" class="signature-preview">
+
                             <small>Firma cargada correctamente</small>
                         </div>
                     </div>
@@ -130,7 +131,7 @@
                     <div class="form-group">
                         <label for="empresa_transporte">Nombre Transportadora *</label>
                         <input type="text" id="empresa_transporte" formControlName="empresaTransporte"
-                               [class.error]="isFieldInvalid('empresaTransporte')">
+                               [class.error]="isFieldInvalid('empresaTransporte') ">
                         <div *ngIf="isFieldInvalid('empresaTransporte')" class="error-message">
                             {{ getFieldError('empresaTransporte') }}
                         </div>
@@ -138,8 +139,8 @@
                     
                     <div class="form-group">
                         <label for="firma_conductor">Firma del Conductor *</label>
-                        <input type="text" id="firma_conductor" formControlName="firmaConductor"
-                               [class.error]="isFieldInvalid('firmaConductor')">
+                        <input type="file" id="firma_conductor" formControlName="firmaConductor"
+                               [class.error]="isFieldInvalid('firmaConductor')" accept="image"(change)="onConductorSignatureChange($event)" >
                         <div *ngIf="isFieldInvalid('firmaConductor')" class="error-message">
                             {{ getFieldError('firmaConductor') }}
                         </div>
@@ -161,8 +162,8 @@
                     
                     <div class="form-group">
                         <label for="diferenciaReportada">Diferencia Reportada</label>
-                        <input type="text" id="diferenciaReportada" formControlName="diferenciaReportada"
-                               readonly class="readonly-field" [value]="diferenciaReportada?.value || ''">
+                      <input readonly class="readonly-field" [value]="bigbagForm.get('diferenciaReportada')?.value || ''">
+
                         <div class="info-message">
                             <small>Este campo se calcula automáticamente basado en la cantidad relacionada y cantidad física</small>
                         </div>

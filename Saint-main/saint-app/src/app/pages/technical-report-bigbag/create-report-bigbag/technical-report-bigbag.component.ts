@@ -1,7 +1,7 @@
-// technical-report-bigbag.component.ts (versión actualizada)
+// technical-report-bigbag.component.ts (versión actualizada con servicio)
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { BigbagService, BigBagFormData } from '../../../services/bigbag.service'; // Importa el servicio
+import { BigbagService } from '../../../services/bigbag.service';
 
 @Component({
   selector: 'app-technical-report-bigbag',
@@ -30,11 +30,12 @@ export class TechnicalReportBigbagComponent implements OnInit {
   submitSuccess: boolean = false;
 
   // Para manejar archivos
-  selectedFile: File | null = null;
+  selectedFirmaFile: File | null = null;
+  selectedFirmaConductorFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private bigbagService: BigbagService // Inyecta el servicio
+    private bigbagService: BigbagService
   ) {
     this.initializeForm();
   }
@@ -52,7 +53,7 @@ export class TechnicalReportBigbagComponent implements OnInit {
       remision: ['', Validators.required],
       cantidadRelacionada: ['', [Validators.required, Validators.min(1)]],
       nomOperario: ['', Validators.required],
-      firma: [''], // Campo opcional para imagen
+      firma: ['', Validators.required], 
       observaciones: ['', Validators.required],
       
       // Paso 2: Información Adicional
@@ -138,6 +139,137 @@ export class TechnicalReportBigbagComponent implements OnInit {
         });
       }
     }
+  }
+
+  // Manejo de archivos de firma
+  onSignatureChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      if (this.validateImageFile(file)) {
+        this.selectedFirmaFile = file;
+        
+      } else {
+        event.target.value = '';
+      }
+    }
+  }
+
+  // Manejo de firma del conductor
+  onConductorSignatureChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      if (this.validateImageFile(file)) {
+        this.selectedFirmaConductorFile = file;
+        
+      } else {
+        event.target.value = '';
+      }
+    }
+  }
+
+  // Validar archivo de imagen
+  private validateImageFile(file: File): boolean {
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor seleccione un archivo de imagen válido.');
+      return false;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB máximo
+      alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Envío del formulario
+  onSubmit(): void {
+    if (this.bigbagForm.valid) {
+      this.isSubmitting = true;
+      this.submitError = '';
+      this.submitSuccess = false;
+
+      // Preparar datos para envío
+      const formData = this.bigbagForm.value;
+      
+      // Enviar datos usando el servicio
+      this.bigbagService.enviarDatosBigBag(
+        formData, 
+        this.selectedFirmaFile || undefined,
+        this.selectedFirmaConductorFile || undefined
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          
+          if (response.success) {
+            this.submitSuccess = true;
+            this.submitError = '';
+            
+            // Mostrar mensaje de éxito
+            alert(`Recepción guardada exitosamente. Número de recepción: ${response.datos?.numero_recepcion}`);
+            
+            // Opcional: resetear formulario
+            this.resetForm();
+          } else {
+            this.submitError = response.mensaje || 'Error al guardar la recepción';
+            this.submitSuccess = false;
+          }
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          this.submitSuccess = false;
+          
+          if (error.error && error.error.mensaje) {
+            this.submitError = error.error.mensaje;
+          } else {
+            this.submitError = 'Error de conexión. Por favor intente nuevamente.';
+          }
+          
+          console.error('Error al enviar datos:', error);
+        }
+      });
+      
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores
+      this.markAllFieldsAsTouched();
+      this.submitError = 'Por favor complete todos los campos requeridos.';
+    }
+  }
+
+  // Método para resetear el formulario
+  resetForm(): void {
+    this.bigbagForm.reset();
+    this.currentStep = 1;
+    this.stepStates = {
+      1: { active: true, completed: false },
+      2: { active: false, completed: false },
+      3: { active: false, completed: false }
+    };
+    this.selectedFirmaFile = null;
+    this.selectedFirmaConductorFile = null;
+    this.submitError = '';
+    this.submitSuccess = false;
+    this.isSubmitting = false;
+    
+    // Restablecer valores por defecto
+    this.bigbagForm.patchValue({
+      fechaIngreso: this.getTodayDate(),
+      horaIngreso: this.getCurrentTime()
+    });
+    
+    this.updateStepDisplay();
+    
+    
+  }
+
+  // Marcar todos los campos como tocados
+  private markAllFieldsAsTouched(): void {
+    Object.keys(this.bigbagForm.controls).forEach(key => {
+      const control = this.bigbagForm.get(key);
+      if (control) {
+        control.markAsTouched();
+      }
+    });
   }
 
   // Validaciones
@@ -250,124 +382,4 @@ export class TechnicalReportBigbagComponent implements OnInit {
     
     return '';
   }
-
-  // Manejo de firma - para input image
-  onSignatureChange(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      console.log('Archivo de firma seleccionado:', file.name);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.bigbagForm.patchValue({
-          firma: e.target?.result
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  // Envío del formulario - ACTUALIZADO
-  onSubmit(): void {
-    if (this.bigbagForm.valid) {
-      this.isSubmitting = true;
-      this.submitError = '';
-      this.submitSuccess = false;
-
-      const formData = this.bigbagForm.value;
-
-      // Si hay archivo de firma, usar FormData
-      if (this.selectedFile) {
-        const formDataWithFile = new FormData();
-        
-        // Agregar todos los campos del formulario
-        Object.keys(formData).forEach(key => {
-          if (key !== 'firma' && formData[key] !== null && formData[key] !== undefined) {
-            formDataWithFile.append(key, formData[key]);
-          }
-        });
-        
-        // Agregar el archivo de firma
-        formDataWithFile.append('firma', this.selectedFile);
-
-        // Enviar con archivo
-        this.bigbagService.submitBigBagFormWithFile(formDataWithFile).subscribe({
-          next: (response) => {
-            this.handleSubmitSuccess(response);
-          },
-          error: (error) => {
-            this.handleSubmitError(error);
-          }
-        });
-      } else {
-        // Enviar sin archivo
-        this.bigbagService.submitBigBagForm(formData).subscribe({
-          next: (response) => {
-            this.handleSubmitSuccess(response);
-          },
-          error: (error) => {
-            this.handleSubmitError(error);
-          }
-        });
-      }
-    } else {
-      console.log('Formulario inválido');
-      this.markAllFieldsAsTouched();
-    }
-  }
-
-  private handleSubmitSuccess(response: any): void {
-    this.isSubmitting = false;
-    this.submitSuccess = true;
-    console.log('Formulario enviado exitosamente:', response);
-    
-    // Opcional: resetear el formulario
-    // this.bigbagForm.reset();
-    // this.selectedFile = null;
-    // this.currentStep = 1;
-    
-    // Mostrar mensaje de éxito
-    alert('Formulario enviado exitosamente');
-  }
-
-  private handleSubmitError(error: any): void {
-    this.isSubmitting = false;
-    console.error('Error al enviar formulario:', error);
-    
-    if (error.error && error.error.message) {
-      this.submitError = error.error.message;
-    } else if (error.message) {
-      this.submitError = error.message;
-    } else {
-      this.submitError = 'Error desconocido al enviar el formulario';
-    }
-    
-    alert('Error al enviar el formulario: ' + this.submitError);
-  }
-
-  private markAllFieldsAsTouched(): void {
-    Object.keys(this.bigbagForm.controls).forEach(key => {
-      const control = this.bigbagForm.get(key);
-      if (control) {
-        control.markAsTouched();
-      }
-    });
-  }
-
-  // Getters para facilitar el acceso en el template
-  get fechaIngreso() { return this.bigbagForm.get('fechaIngreso'); }
-  get horaIngreso() { return this.bigbagForm.get('horaIngreso'); }
-  get planta() { return this.bigbagForm.get('planta'); }
-  get remision() { return this.bigbagForm.get('remision'); }
-  get cantidadRelacionada() { return this.bigbagForm.get('cantidadRelacionada'); }
-  get nomOperario() { return this.bigbagForm.get('nomOperario'); }
-  get firma() { return this.bigbagForm.get('firma'); }
-  get observaciones() { return this.bigbagForm.get('observaciones'); }
-  get nomConductor() { return this.bigbagForm.get('nomConductor'); }
-  get placaVehiculo() { return this.bigbagForm.get('placaVehiculo'); }
-  get empresaTransporte() { return this.bigbagForm.get('empresaTransporte'); }
-  get firmaConductor() { return this.bigbagForm.get('firmaConductor'); }
-  get cantidadFisico() { return this.bigbagForm.get('cantidadFisico'); }
-  get diferenciaReportada() { return this.bigbagForm.get('diferenciaReportada'); }
 }
