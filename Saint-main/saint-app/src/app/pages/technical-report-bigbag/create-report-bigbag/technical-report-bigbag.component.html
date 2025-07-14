@@ -90,7 +90,6 @@
                             {{ getFieldError('firma') }}
                         </div>
                         <div *ngIf="bigbagForm.get('firma')?.value" class="signature-preview">
-
                             <small>Firma cargada correctamente</small>
                         </div>
                     </div>
@@ -131,7 +130,7 @@
                     <div class="form-group">
                         <label for="empresa_transporte">Nombre Transportadora *</label>
                         <input type="text" id="empresa_transporte" formControlName="empresaTransporte"
-                               [class.error]="isFieldInvalid('empresaTransporte') ">
+                               [class.error]="isFieldInvalid('empresaTransporte')">
                         <div *ngIf="isFieldInvalid('empresaTransporte')" class="error-message">
                             {{ getFieldError('empresaTransporte') }}
                         </div>
@@ -140,7 +139,7 @@
                     <div class="form-group">
                         <label for="firma_conductor">Firma del Conductor *</label>
                         <input type="file" id="firma_conductor" formControlName="firmaConductor"
-                               [class.error]="isFieldInvalid('firmaConductor')" accept="image"(change)="onConductorSignatureChange($event)" >
+                               [class.error]="isFieldInvalid('firmaConductor')" accept="image/*" (change)="onConductorSignatureChange($event)">
                         <div *ngIf="isFieldInvalid('firmaConductor')" class="error-message">
                             {{ getFieldError('firmaConductor') }}
                         </div>
@@ -162,14 +161,11 @@
                     
                     <div class="form-group">
                         <label for="diferenciaReportada">Diferencia Reportada</label>
-                      <input readonly class="readonly-field" [value]="bigbagForm.get('diferenciaReportada')?.value || ''">
-
+                        <input readonly class="readonly-field" [value]="bigbagForm.get('diferenciaReportada')?.value || ''">
                         <div class="info-message">
                             <small>Este campo se calcula automáticamente basado en la cantidad relacionada y cantidad física</small>
                         </div>
                     </div>
-                    
-                    
                 </div>
             </div>
 
@@ -186,10 +182,57 @@
                 </button>
                 
                 <button type="submit" class="btn btn-success" 
-                        *ngIf="currentStep === totalSteps" >
-                    Enviar Formulario
+                        *ngIf="currentStep === totalSteps" [disabled]="isSubmitting">
+                    <span *ngIf="isSubmitting">Enviando...</span>
+                    <span *ngIf="!isSubmitting">Enviar Formulario</span>
                 </button>
             </div>
+
+            <!-- Mensaje de error -->
+            <div *ngIf="submitError" class="error-container">
+                <div class="error-message">{{ submitError }}</div>
+            </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal de Éxito -->
+<div class="modal-backdrop" *ngIf="showSuccessModal" (click)="onModalBackdropClick($event)">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <path d="M9 11l3 3L22 4"></path>
+                </svg>
+            </div>
+            <h2 class="modal-title">¡Recepción Exitosa!</h2>
+        </div>
+        
+        <div class="modal-body">
+            <p class="modal-message">
+                La recepción ha sido guardada exitosamente en el sistema.
+            </p>
+            <div class="modal-details">
+                <div class="detail-item">
+                    <strong>Número de Recepción:</strong>
+                    <span class="reception-number">{{ numeroRecepcion }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Fecha:</strong>
+                    <span>{{ bigbagForm.get('fechaIngreso')?.value | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Planta:</strong>
+                    <span>{{ bigbagForm.get('planta')?.value }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" (click)="closeSuccessModal()">
+                Aceptar
+            </button>
+        </div>
     </div>
 </div>

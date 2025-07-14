@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { DEFAULT_CURRENCY_CODE, LOCALE_ID, NgModule } from '@angular/core';
+import { SignaturePadComponent } from '../app/pages/technical-report-bigbag/create-report-bigbag/signature-pad/signature-pad.component'; //
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -51,7 +52,8 @@ registerLocaleData(localeEs, 'es-CO');
         ListUserComponent,
         CreateUserComponent,
         TechnicalReportBigbagComponent,
-        ViewReportBigbagComponent
+        ViewReportBigbagComponent,
+          SignaturePadComponent 
     ],
     bootstrap: [AppComponent], 
     imports: [

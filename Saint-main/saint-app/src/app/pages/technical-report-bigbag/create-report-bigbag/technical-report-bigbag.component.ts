@@ -1,7 +1,8 @@
-// technical-report-bigbag.component.ts (versión actualizada con servicio)
+// technical-report-bigbag.component.ts (con modal de éxito)
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BigbagService } from '../../../services/bigbag.service';
+import { User } from '../../../models/User';
 
 @Component({
   selector: 'app-technical-report-bigbag',
@@ -10,28 +11,29 @@ import { BigbagService } from '../../../services/bigbag.service';
 })
 export class TechnicalReportBigbagComponent implements OnInit {
 
-  // Formulario reactivo
   bigbagForm: FormGroup;
-  
-  // Control de pasos
   currentStep: number = 1;
   totalSteps: number = 3;
   
-  // Estados de los pasos
   stepStates = {
     1: { active: true, completed: false },
     2: { active: false, completed: false },
     3: { active: false, completed: false }
   };
 
-  // Estados para manejar la carga
   isSubmitting: boolean = false;
   submitError: string = '';
   submitSuccess: boolean = false;
 
-  // Para manejar archivos
   selectedFirmaFile: File | null = null;
   selectedFirmaConductorFile: File | null = null;
+
+  // Propiedad para almacenar el usuario actual
+  currentUser: User | null = null;
+
+  // Propiedades para el modal de éxito
+  showSuccessModal: boolean = false;
+  numeroRecepcion: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -42,11 +44,29 @@ export class TechnicalReportBigbagComponent implements OnInit {
 
   ngOnInit(): void {
     this.updateStepDisplay();
+    this.loadCurrentUser();
+  }
+
+  /**
+   * Cargar el usuario actual desde el servicio de autenticación
+   * Reemplaza este método con tu lógica de autenticación
+   */
+  private loadCurrentUser(): void {
+    // Ejemplo temporal - cambiar por el id_Sdp que funciona
+    this.currentUser = {
+      // id = currenData.id_Sdp
+      id: 27,
+      firstName: 'Juan',
+      lastName: 'Pérez',
+      email: 'juan.perez@example.com',
+      password: '',
+      enable: true,
+      roles: []
+    };
   }
 
   private initializeForm(): void {
     this.bigbagForm = this.fb.group({
-      // Paso 1: Información Inicial
       fechaIngreso: [this.getTodayDate(), Validators.required],
       horaIngreso: [this.getCurrentTime(), Validators.required],
       planta: ['', Validators.required],
@@ -55,19 +75,14 @@ export class TechnicalReportBigbagComponent implements OnInit {
       nomOperario: ['', Validators.required],
       firma: ['', Validators.required], 
       observaciones: ['', Validators.required],
-      
-      // Paso 2: Información Adicional
       nomConductor: ['', Validators.required],
       placaVehiculo: ['', Validators.required],
       empresaTransporte: ['', Validators.required],
       firmaConductor: ['', Validators.required],
-      
-      // Paso 3: Datos Físicos
       cantidadFisico: ['', [Validators.required, Validators.min(0)]],
-      diferenciaReportada: [''] // Campo calculado automáticamente
+      diferenciaReportada: ['']
     });
 
-    // Suscribirse a cambios en las cantidades para calcular la diferencia automáticamente
     this.bigbagForm.get('cantidadRelacionada')?.valueChanges.subscribe(() => {
       this.calcularDiferenciaReportada();
     });
@@ -77,7 +92,6 @@ export class TechnicalReportBigbagComponent implements OnInit {
     });
   }
 
-  // Navegación entre pasos
   siguientePaso(): void {
     if (this.isCurrentStepValid() && this.currentStep < this.totalSteps) {
       this.stepStates[this.currentStep].completed = true;
@@ -113,7 +127,6 @@ export class TechnicalReportBigbagComponent implements OnInit {
     }
   }
 
-  // Función para calcular la diferencia reportada
   calcularDiferenciaReportada(): void {
     const cantidadRelacionada = this.bigbagForm.get('cantidadRelacionada')?.value;
     const cantidadFisico = this.bigbagForm.get('cantidadFisico')?.value;
@@ -141,40 +154,31 @@ export class TechnicalReportBigbagComponent implements OnInit {
     }
   }
 
-  // Manejo de archivos de firma
   onSignatureChange(event: any): void {
     const file = event.target.files[0];
-    if (file) {
-      if (this.validateImageFile(file)) {
-        this.selectedFirmaFile = file;
-        
-      } else {
-        event.target.value = '';
-      }
+    if (file && this.validateImageFile(file)) {
+      this.selectedFirmaFile = file;
+    } else {
+      event.target.value = '';
     }
   }
 
-  // Manejo de firma del conductor
   onConductorSignatureChange(event: any): void {
     const file = event.target.files[0];
-    if (file) {
-      if (this.validateImageFile(file)) {
-        this.selectedFirmaConductorFile = file;
-        
-      } else {
-        event.target.value = '';
-      }
+    if (file && this.validateImageFile(file)) {
+      this.selectedFirmaConductorFile = file;
+    } else {
+      event.target.value = '';
     }
   }
 
-  // Validar archivo de imagen
   private validateImageFile(file: File): boolean {
     if (!file.type.startsWith('image/')) {
       alert('Por favor seleccione un archivo de imagen válido.');
       return false;
     }
     
-    if (file.size > 5 * 1024 * 1024) { // 5MB máximo
+    if (file.size > 5 * 1024 * 1024) {
       alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
       return false;
     }
@@ -182,19 +186,24 @@ export class TechnicalReportBigbagComponent implements OnInit {
     return true;
   }
 
-  // Envío del formulario
   onSubmit(): void {
+    // Validar que tengamos el usuario actual
+    if (!this.currentUser || !this.currentUser.id) {
+      this.submitError = 'Error: No se pudo obtener la información del usuario actual.';
+      return;
+    }
+
     if (this.bigbagForm.valid) {
       this.isSubmitting = true;
       this.submitError = '';
       this.submitSuccess = false;
 
-      // Preparar datos para envío
       const formData = this.bigbagForm.value;
       
-      // Enviar datos usando el servicio
+      // Llamar al servicio pasando el ID del usuario
       this.bigbagService.enviarDatosBigBag(
-        formData, 
+        formData,
+        this.currentUser.id,
         this.selectedFirmaFile || undefined,
         this.selectedFirmaConductorFile || undefined
       ).subscribe({
@@ -205,11 +214,10 @@ export class TechnicalReportBigbagComponent implements OnInit {
             this.submitSuccess = true;
             this.submitError = '';
             
-            // Mostrar mensaje de éxito
-            alert(`Recepción guardada exitosamente. Número de recepción: ${response.datos?.numero_recepcion}`);
+            // Mostrar modal en lugar de alert
+            this.numeroRecepcion = response.datos?.numero_recepcion || 'N/A';
+            this.showSuccessModal = true;
             
-            // Opcional: resetear formulario
-            this.resetForm();
           } else {
             this.submitError = response.mensaje || 'Error al guardar la recepción';
             this.submitSuccess = false;
@@ -230,13 +238,24 @@ export class TechnicalReportBigbagComponent implements OnInit {
       });
       
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       this.markAllFieldsAsTouched();
       this.submitError = 'Por favor complete todos los campos requeridos.';
     }
   }
 
-  // Método para resetear el formulario
+  // Método para cerrar el modal de éxito
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+    this.resetForm();
+  }
+
+  // Método para cerrar el modal haciendo clic en el backdrop
+  onModalBackdropClick(event: Event): void {
+    if (event.target === event.currentTarget) {
+      this.closeSuccessModal();
+    }
+  }
+
   resetForm(): void {
     this.bigbagForm.reset();
     this.currentStep = 1;
@@ -250,19 +269,17 @@ export class TechnicalReportBigbagComponent implements OnInit {
     this.submitError = '';
     this.submitSuccess = false;
     this.isSubmitting = false;
+    this.showSuccessModal = false;
+    this.numeroRecepcion = '';
     
-    // Restablecer valores por defecto
     this.bigbagForm.patchValue({
       fechaIngreso: this.getTodayDate(),
       horaIngreso: this.getCurrentTime()
     });
     
     this.updateStepDisplay();
-    
-    
   }
 
-  // Marcar todos los campos como tocados
   private markAllFieldsAsTouched(): void {
     Object.keys(this.bigbagForm.controls).forEach(key => {
       const control = this.bigbagForm.get(key);
@@ -272,7 +289,6 @@ export class TechnicalReportBigbagComponent implements OnInit {
     });
   }
 
-  // Validaciones
   private isCurrentStepValid(): boolean {
     const currentStepFields = this.getFieldsForStep(this.currentStep);
     
@@ -310,7 +326,6 @@ export class TechnicalReportBigbagComponent implements OnInit {
     }
   }
 
-  // Utilidades
   private getTodayDate(): string {
     const today = new Date();
     const year = today.getFullYear();
