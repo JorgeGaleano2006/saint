@@ -1,2 +1,242 @@
-<p>Estado documentos</p>
+<h1>Estado documentos</h1>
 
+<div id="mostrar_paginacion">
+  <label for="cantidad">Mostrar</label>
+  <select name="cantidad" id="catidad" [(ngModel)]="itemsPerPage" (change)="currentPage = 1">
+    <option value="10">10</option>
+    <option value="20">20</option>
+    <option value="30">30</option>
+  </select>
+  <label for="cantidad">Entradas</label>
+</div>
+
+<!-- Campo de búsqueda -->
+<div id="busqueda_datos">
+  <label for="search_input">Buscar :</label>
+  <input type="text" [(ngModel)]="searchText" placeholder="Buscar" class="search-input" id="search_input">
+</div>
+
+<!-- Tabla para mostrar los documentos -->
+<table>
+  <thead>
+    <tr>
+      <th>Numero recepcion</th>
+      <th>Fecha ingreso</th>
+      <th>Hora llegada</th>
+      <th>Planta</th>
+      <th>Numero remision</th>
+      <th>Estado</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let doc of paginatedDocumentos">
+      <td>{{ doc.num_recepcion }}</td>
+      <td>{{ doc.fecha_ingreso }}</td>
+      <td>{{ doc.hora_llegada }}</td>
+      <td>{{ doc.planta }}</td>
+      <td>{{ doc.num_remision }}</td>
+      <td>{{ doc.estado }}</td>
+      <td>
+        <button (click)="verDocumento(doc)">Detalles</button>
+        <button (click)="editarDocumento(doc)">Editar</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Paginación -->
+<div class="pagination">
+  <button (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>
+  <span>Página {{ currentPage }} de {{ totalPages }}</span>
+  <button (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente</button>
+</div>
+
+<!-- Modal para mostrar detalles del documento -->
+<div class="modal-overlay" *ngIf="mostrarModal" (click)="cerrarModal()">
+  <div class="modal-content modal-subir" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles del Documento</h2>
+      <button class="close-button" (click)="cerrarModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="documentoSeleccionado">
+      <div class="detalle-grid">
+        <div class="detalle-item">
+          <label>Número de Recepción:</label>
+          <span>{{ documentoSeleccionado.num_recepcion }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Fecha de Ingreso:</label>
+          <span>{{ documentoSeleccionado.fecha_ingreso }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Hora de Llegada:</label>
+          <span>{{ documentoSeleccionado.hora_llegada }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Planta:</label>
+          <span>{{ documentoSeleccionado.planta }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Número de Remisión:</label>
+          <span>{{ documentoSeleccionado.num_remision }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Cantidad Relacionada:</label>
+          <span>{{ documentoSeleccionado.cant_relacionada }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Nombre del Operario:</label>
+          <span>{{ documentoSeleccionado.nom_operario }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Firma del Operario:</label>
+          <span>
+            <button (click)="verFirma(documentoSeleccionado.firma_operario)">Ver firma</button>
+          </span>
+        </div>
+
+        
+        <div class="detalle-item">
+          <label>Nombre del Conductor:</label>
+          <span>{{ documentoSeleccionado.nom_conductor }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Placa del Vehículo:</label>
+          <span>{{ documentoSeleccionado.placa_vehiculo }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Nombre del Transportador:</label>
+          <span>{{ documentoSeleccionado.nom_transportador }}</span>
+        </div>
+        
+         <div class="detalle-item">
+          <label>Firma del Conductor:</label>
+          <span>
+            <button (click)="verFirma(documentoSeleccionado.firma_conductor)">Ver firma</button>
+          </span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Cantidad Física:</label>
+          <span>{{ documentoSeleccionado.cantidad_fisico }}</span>
+        </div>
+        
+        <div class="detalle-item">
+          <label>Diferencia Reportada:</label>
+          <span>{{ documentoSeleccionado.diferencia_reportada }}</span>
+        </div>
+        
+      
+        
+        <div class="detalle-item">
+          <label>Estado:</label>
+          <span class="estado-badge" [ngClass]="'estado-' + documentoSeleccionado.estado?.toLowerCase()">
+            {{ documentoSeleccionado.estado }}
+          </span>
+        </div>
+        
+        <div class="detalle-item observaciones">
+          <label>Observaciones:</label>
+          <div class="observaciones-content">
+            {{ documentoSeleccionado.observaciones || 'Sin observaciones' }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para editar cantidades -->
+<!-- Modal para editar cantidades -->
+<div class="modal-overlay" *ngIf="mostrarModalEdicion" (click)="cerrarModalEdicion()">
+  <div class="modal-content modal-edicion" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Cantidades</h2>
+      <button class="close-button" (click)="cerrarModalEdicion()">&times;</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="documentoEditar">
+      <!-- Información del documento -->
+      <div class="documento-info">
+        <h3>Documento: {{ documentoEditar.num_recepcion }}</h3>
+        <p><strong>Remisión:</strong> {{ documentoEditar.num_remision }}</p>
+        <p><strong>Planta:</strong> {{ documentoEditar.planta }}</p>
+      </div>
+
+      <!-- Formulario de edición -->
+      <form class="form-edicion" (ngSubmit)="guardarCambios()">
+        <div class="form-group">
+          <label for="cant_relacionada">Cantidad Relacionada:</label>
+          <input
+            type="number"
+            id="cant_relacionada"
+            [(ngModel)]="formEdicion.cant_relacionada"
+            name="cant_relacionada"
+            class="form-control"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="cantidad_fisico">Cantidad Física:</label>
+          <input
+            type="number"
+            id="cantidad_fisico"
+            [(ngModel)]="formEdicion.cantidad_fisico"
+            name="cantidad_fisico"
+            class="form-control"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+
+        <!-- Mostrar diferencia calculada con mensaje descriptivo -->
+        <div class="diferencia-calculada">
+          <label>Diferencia Reportada:</label>
+          <span [ngClass]="obtenerClaseDiferencia()">
+            {{ obtenerMensajeDiferencia() }}
+          </span>
+        </div>
+
+        <!-- Mensajes de estado -->
+        <div class="mensajes-estado">
+          <div *ngIf="errorActualizacion" class="error-message">
+            {{ errorActualizacion }}
+          </div>
+          
+          <div *ngIf="exitoActualizacion" class="success-message">
+            ¡Cantidades actualizadas exitosamente!
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="cerrarModalEdicion()" [disabled]="cargandoActualizacion">
+        Cancelar
+      </button>
+      <button type="button" class="btn-primary" (click)="guardarCambios()" [disabled]="cargandoActualizacion">
+        <span *ngIf="cargandoActualizacion">Guardando...</span>
+        <span *ngIf="!cargandoActualizacion">Guardar Cambios</span>
+      </button>
+    </div>
+  </div>
+</div>

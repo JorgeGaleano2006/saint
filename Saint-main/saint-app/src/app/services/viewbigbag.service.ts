@@ -14,4 +14,15 @@ export class DocumentoService {
   obtenerDocumentos(): Observable<any> {
     return this.http.get(this.apiUrl);
   }
+
+  actualizarCantidades(numRecepcion: string, cantRelacionada: number, cantidadFisica: number, diferenciaReportada: string): Observable<any> {
+  const data = {
+    num_recepcion: numRecepcion,
+    cant_relacionada: cantRelacionada,
+    cantidad_fisico: cantidadFisica,
+    diferencia_reportada: diferenciaReportada
+  };
+  
+  return this.http.put(this.apiUrl, data);
+}
 }

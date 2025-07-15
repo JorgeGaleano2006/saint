@@ -83,16 +83,11 @@
                     
                     <div class="form-group full-width">
                         <label for="firma">Firma de quien Recibe</label>
-                        <input type="file" id="firma" formControlName="firma" 
-                               accept="image/*" (change)="onSignatureChange($event)"
-                               [class.error]="isFieldInvalid('firma')">
+                        <app-signature-pad (signatureData)="onSignatureData($event)"></app-signature-pad>
                         <div *ngIf="isFieldInvalid('firma')" class="error-message">
                             {{ getFieldError('firma') }}
                         </div>
-                        <div *ngIf="bigbagForm.get('firma')?.value" class="signature-preview">
-                            <small>Firma cargada correctamente</small>
                         </div>
-                    </div>
                     
                     <div class="form-group full-width">
                         <label for="observaciones">Observaciones *</label>
@@ -136,14 +131,13 @@
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="firma_conductor">Firma del Conductor *</label>
-                        <input type="file" id="firma_conductor" formControlName="firmaConductor"
-                               [class.error]="isFieldInvalid('firmaConductor')" accept="image/*" (change)="onConductorSignatureChange($event)">
-                        <div *ngIf="isFieldInvalid('firmaConductor')" class="error-message">
-                            {{ getFieldError('firmaConductor') }}
+                    <div class="form-group full-width">
+                            <label for="firma_conductor">Firma del Conductor</label>
+                            <app-signature-pad (signatureData)="onConductorSignatureData($event)"></app-signature-pad>
+                            <div *ngIf="isFieldInvalid('firmaConductor')" class="error-message">
+                                {{ getFieldError('firmaConductor') }}
+                            </div>
                         </div>
-                    </div>
                 </div>
             </div>
 

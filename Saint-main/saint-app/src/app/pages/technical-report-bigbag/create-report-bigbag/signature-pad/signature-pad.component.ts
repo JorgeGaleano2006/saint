@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewInit, Output, EventEmitter } from '@angular/core';
 import SignaturePad from 'signature_pad';
 
 @Component({
@@ -8,6 +8,8 @@ import SignaturePad from 'signature_pad';
 })
 export class SignaturePadComponent implements AfterViewInit {
   @ViewChild('canvas') canvasEl: ElementRef;
+  @Output() signatureData = new EventEmitter<string>();
+
   signaturePad: SignaturePad;
 
   ngAfterViewInit() {
@@ -18,7 +20,12 @@ export class SignaturePadComponent implements AfterViewInit {
     this.signaturePad.clear();
   }
 
-  getSignatureImage(): string {
-    return this.signaturePad.toDataURL('image/png');
+  saveSignature() {
+    if (this.signaturePad.isEmpty()) {
+      alert('Please provide a signature first.');
+    } else {
+      const dataURL = this.signaturePad.toDataURL('image/jpeg');
+      this.signatureData.emit(dataURL);
+    }
   }
 }
